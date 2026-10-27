@@ -1,27 +1,28 @@
-cimport options
+from . cimport options
 from libc.stdint cimport uint64_t, uint32_t
-from status cimport Status
+from .status cimport Status
 from libcpp cimport bool as cpp_bool
 from libcpp.string cimport string
 from libcpp.vector cimport vector
-from slice_ cimport Slice
-from snapshot cimport Snapshot
-from iterator cimport Iterator
+from .types cimport SequenceNumber
+from .slice_ cimport Slice
+from .snapshot cimport Snapshot
+from .iterator cimport Iterator
 
 cdef extern from "rocksdb/write_batch.h" namespace "rocksdb":
     cdef cppclass WriteBatch:
-        WriteBatch() nogil except+
-        WriteBatch(string) nogil except+
-        void Put(const Slice&, const Slice&) nogil except+
-        void Put(ColumnFamilyHandle*, const Slice&, const Slice&) nogil except+
-        void Merge(const Slice&, const Slice&) nogil except+
-        void Merge(ColumnFamilyHandle*, const Slice&, const Slice&) nogil except+
-        void Delete(const Slice&) nogil except+
-        void Delete(ColumnFamilyHandle*, const Slice&) nogil except+
-        void PutLogData(const Slice&) nogil except+
-        void Clear() nogil except+
-        const string& Data() nogil except+
-        int Count() nogil except+
+        WriteBatch() except+ nogil
+        WriteBatch(string) except+ nogil
+        void Put(const Slice&, const Slice&) except+ nogil
+        void Put(ColumnFamilyHandle*, const Slice&, const Slice&) except+ nogil
+        void Merge(const Slice&, const Slice&) except+ nogil
+        void Merge(ColumnFamilyHandle*, const Slice&, const Slice&) except+ nogil
+        void Delete(const Slice&) except+ nogil
+        void Delete(ColumnFamilyHandle*, const Slice&) except+ nogil
+        void PutLogData(const Slice&) except+ nogil
+        void Clear() except+ nogil
+        const string& Data() except+ nogil
+        int Count() except+ nogil
 
 cdef extern from "cpp/write_batch_iter_helper.hpp" namespace "py_rocks":
     cdef enum BatchItemOp "RecordItemsHandler::Optype":
@@ -39,7 +40,6 @@ cdef extern from "cpp/write_batch_iter_helper.hpp" namespace "py_rocks":
 
 
 cdef extern from "rocksdb/db.h" namespace "rocksdb":
-    ctypedef uint64_t SequenceNumber
     string kDefaultColumnFamilyName
 
     cdef struct LiveFileMetaData:
@@ -51,6 +51,28 @@ cdef extern from "rocksdb/db.h" namespace "rocksdb":
         SequenceNumber smallest_seqno
         SequenceNumber largest_seqno
 
+    # cdef struct SstFileMetaData:
+    #     uint64_t size
+    #     string name
+    #     uint64_t file_number
+    #     string db_path
+    #     string smallestkey
+    #     string largestkey
+    #     SequenceNumber smallest_seqno
+    #     SequenceNumber largest_seqno
+
+    # cdef struct LevelMetaData:
+    #     int level
+    #     uint64_t size
+    #     string largestkey
+    #     LiveFileMetaData files
+
+    cdef struct ColumnFamilyMetaData:
+        uint64_t size
+        uint64_t file_count
+        # string largestkey
+        # LevelMetaData levels
+
     cdef cppclass Range:
         Range(const Slice&, const Slice&)
 
@@ -59,94 +81,95 @@ cdef extern from "rocksdb/db.h" namespace "rocksdb":
             const options.WriteOptions&,
             ColumnFamilyHandle*,
             const Slice&,
-            const Slice&) nogil except+
+            const Slice&) except+ nogil
 
         Status Delete(
             const options.WriteOptions&,
             ColumnFamilyHandle*,
-            const Slice&) nogil except+
+            const Slice&) except+ nogil
 
         Status Merge(
             const options.WriteOptions&,
             ColumnFamilyHandle*,
             const Slice&,
-            const Slice&) nogil except+
+            const Slice&) except+ nogil
 
         Status Write(
             const options.WriteOptions&,
-            WriteBatch*) nogil except+
+            WriteBatch*) except+ nogil
 
         Status Get(
             const options.ReadOptions&,
             ColumnFamilyHandle*,
             const Slice&,
-            string*) nogil except+
+            string*) except+ nogil
 
         vector[Status] MultiGet(
             const options.ReadOptions&,
             const vector[ColumnFamilyHandle*]&,
             const vector[Slice]&,
-            vector[string]*) nogil except+
+            vector[string]*) except+ nogil
 
         cpp_bool KeyMayExist(
             const options.ReadOptions&,
             ColumnFamilyHandle*,
             Slice&,
             string*,
-            cpp_bool*) nogil except+
+            cpp_bool*) except+ nogil
 
         cpp_bool KeyMayExist(
             const options.ReadOptions&,
             ColumnFamilyHandle*,
             Slice&,
-            string*) nogil except+
+            string*) except+ nogil
 
         Iterator* NewIterator(
             const options.ReadOptions&,
-            ColumnFamilyHandle*) nogil except+
+            ColumnFamilyHandle*) except+ nogil
 
         void NewIterators(
             const options.ReadOptions&,
             vector[ColumnFamilyHandle*]&,
-            vector[Iterator*]*) nogil except+
+            vector[Iterator*]*) except+ nogil
 
-        const Snapshot* GetSnapshot() nogil except+
+        const Snapshot* GetSnapshot() except+ nogil
 
-        void ReleaseSnapshot(const Snapshot*) nogil except+
+        void ReleaseSnapshot(const Snapshot*) except+ nogil
 
         cpp_bool GetProperty(
             ColumnFamilyHandle*,
             const Slice&,
-            string*) nogil except+
+            string*) except+ nogil
 
         void GetApproximateSizes(
             ColumnFamilyHandle*,
             const Range*
             int,
-            uint64_t*) nogil except+
+            uint64_t*) except+ nogil
 
         Status CompactRange(
             const options.CompactRangeOptions&,
             ColumnFamilyHandle*,
             const Slice*,
-            const Slice*) nogil except+
+            const Slice*) except+ nogil
 
         Status CreateColumnFamily(
             const options.ColumnFamilyOptions&,
             const string&,
-            ColumnFamilyHandle**) nogil except+
+            ColumnFamilyHandle**) except+ nogil
 
         Status DropColumnFamily(
-            ColumnFamilyHandle*) nogil except+
+            ColumnFamilyHandle*) except+ nogil
 
-        int NumberLevels(ColumnFamilyHandle*) nogil except+
-        int MaxMemCompactionLevel(ColumnFamilyHandle*) nogil except+
-        int Level0StopWriteTrigger(ColumnFamilyHandle*) nogil except+
-        const string& GetName() nogil except+
-        const options.Options& GetOptions(ColumnFamilyHandle*) nogil except+
-        Status Flush(const options.FlushOptions&, ColumnFamilyHandle*) nogil except+
-        Status DisableFileDeletions() nogil except+
-        Status EnableFileDeletions() nogil except+
+        int NumberLevels(ColumnFamilyHandle*) except+ nogil
+        int MaxMemCompactionLevel(ColumnFamilyHandle*) except+ nogil
+        int Level0StopWriteTrigger(ColumnFamilyHandle*) except+ nogil
+        const string& GetName() except+ nogil
+        options.Options GetOptions(ColumnFamilyHandle*) except+ nogil
+        Status Flush(const options.FlushOptions&, ColumnFamilyHandle*) except+ nogil
+        Status DisableFileDeletions() except+ nogil
+        Status EnableFileDeletions() except+ nogil
+        Status Close() except+ nogil
 
         # TODO: Status GetSortedWalFiles(VectorLogPtr& files)
         # TODO: SequenceNumber GetLatestSequenceNumber()
@@ -154,28 +177,29 @@ cdef extern from "rocksdb/db.h" namespace "rocksdb":
                   # SequenceNumber seq_number,
                   # unique_ptr[TransactionLogIterator]*)
 
-        Status DeleteFile(string) nogil except+
-        void GetLiveFilesMetaData(vector[LiveFileMetaData]*) nogil except+
+        Status DeleteFile(string) except+ nogil
+        void GetLiveFilesMetaData(vector[LiveFileMetaData]*) except+ nogil
+        void GetColumnFamilyMetaData(ColumnFamilyHandle*, ColumnFamilyMetaData*) except+ nogil
         ColumnFamilyHandle* DefaultColumnFamily()
 
 
     cdef Status DB_Open "rocksdb::DB::Open"(
         const options.Options&,
         const string&,
-        DB**) nogil except+
+        DB**) except+ nogil
 
     cdef Status DB_Open_ColumnFamilies "rocksdb::DB::Open"(
         const options.Options&,
         const string&,
         const vector[ColumnFamilyDescriptor]&,
         vector[ColumnFamilyHandle*]*,
-        DB**) nogil except+
+        DB**) except+ nogil
 
     cdef Status DB_OpenForReadOnly "rocksdb::DB::OpenForReadOnly"(
         const options.Options&,
         const string&,
         DB**,
-        cpp_bool) nogil except+
+        cpp_bool) except+ nogil
 
     cdef Status DB_OpenForReadOnly_ColumnFamilies "rocksdb::DB::OpenForReadOnly"(
         const options.Options&,
@@ -183,23 +207,26 @@ cdef extern from "rocksdb/db.h" namespace "rocksdb":
         const vector[ColumnFamilyDescriptor]&,
         vector[ColumnFamilyHandle*]*,
         DB**,
-        cpp_bool) nogil except+
+        cpp_bool) except+ nogil
 
     cdef Status RepairDB(const string& dbname, const options.Options&)
 
     cdef Status ListColumnFamilies "rocksdb::DB::ListColumnFamilies" (
         const options.Options&,
         const string&,
-        vector[string]*) nogil except+
+        vector[string]*) except+ nogil
 
     cdef cppclass ColumnFamilyHandle:
-        const string& GetName() nogil except+
-        int GetID() nogil except+
+        const string& GetName() except+ nogil
+        int GetID() except+ nogil
 
     cdef cppclass ColumnFamilyDescriptor:
-        ColumnFamilyDescriptor() nogil except+
+        ColumnFamilyDescriptor() except+ nogil
         ColumnFamilyDescriptor(
 	    const string&,
-            const options.ColumnFamilyOptions&) nogil except+
+            const options.ColumnFamilyOptions&) except+ nogil
         string name
         options.ColumnFamilyOptions options
+
+cdef extern from "rocksdb/convenience.h" namespace "rocksdb":
+    void CancelAllBackgroundWork(DB*, cpp_bool) except+ nogil

@@ -1,33 +1,37 @@
-FROM ubuntu:18.04
-ENV SRC /home/tester/src
-ENV DEBIAN_FRONTEND noninteractive
+FROM ubuntu:24.04
 
-RUN apt-get update -y && apt-get install -qy \
-        locales \
-        git \
-        wget \
-        python \
-        python3 \
-        python-dev \
-        python3-dev \
-        python-pip \
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        ca-certificates \
+        software-properties-common \
+        gnupg \
+    && add-apt-repository -y ppa:deadsnakes/ppa \
+    && apt-get update && apt-get install -y --no-install-recommends \
+        python3.14 \
+        python3.14-dev \
+        python3.14-venv \
+        build-essential \
+        pkg-config \
         librocksdb-dev \
         libsnappy-dev \
         zlib1g-dev \
         libbz2-dev \
         liblz4-dev \
-        && rm -rf /var/lib/apt/lists/*
+        libzstd-dev \
+        libgflags-dev \
+        curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && curl -sS https://bootstrap.pypa.io/get-pip.py | python3.14 \
+    && python3.14 -m pip install --upgrade build
 
-#NOTE(sileht): really no utf-8 in 2017 !?
-ENV LANG en_US.UTF-8
-RUN update-locale
-RUN locale-gen $LANG
+WORKDIR /src
+COPY . /src
 
-#NOTE(sileht): Upgrade python dev tools
-RUN pip install -U pip tox virtualenv
-
-RUN groupadd --gid 2000 tester
-RUN useradd --uid 2000 --gid 2000 --create-home --shell /bin/bash tester
-USER tester
-
-WORKDIR $SRC
+# Install and import against Ubuntu 24.04's librocksdb 8.9, then write a
+# cp314 wheel. A py3-none-any wheel would be installed on the wrong interpreter.
+RUN python3.14 -m pip install . \
+    && python3.14 -c "import rocksdb; db = rocksdb.DB('/tmp/py3-rocksdb-smoke', rocksdb.Options(create_if_missing=True)); db.put(b'a', b'data'); assert db.get(b'a') == b'data'; print(rocksdb.__file__)" \
+    && python3.14 -m build --wheel --outdir /out

@@ -1,9 +1,9 @@
 from libc.stdint cimport uint32_t
 from libcpp cimport bool as cpp_bool
-from std_memory cimport shared_ptr
+from .std_memory cimport shared_ptr
 
-from cache cimport Cache
-from filter_policy cimport FilterPolicy
+from .cache cimport Cache
+from .filter_policy cimport FilterPolicy
 
 cdef extern from "rocksdb/table.h" namespace "rocksdb":
     cdef cppclass TableFactory:
@@ -20,7 +20,6 @@ cdef extern from "rocksdb/table.h" namespace "rocksdb":
     cdef cppclass BlockBasedTableOptions:
         BlockBasedTableOptions()
         BlockBasedTableIndexType index_type
-        cpp_bool hash_index_allow_collision
         ChecksumType checksum
         cpp_bool no_block_cache
         size_t block_size
@@ -28,8 +27,10 @@ cdef extern from "rocksdb/table.h" namespace "rocksdb":
         int block_restart_interval
         cpp_bool whole_key_filtering
         shared_ptr[Cache] block_cache
-        shared_ptr[Cache] block_cache_compressed
         shared_ptr[FilterPolicy] filter_policy
+        cpp_bool enable_index_compression
+        cpp_bool cache_index_and_filter_blocks
+        int format_version
 
     cdef TableFactory* NewBlockBasedTableFactory(const BlockBasedTableOptions&)
 

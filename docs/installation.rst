@@ -2,24 +2,35 @@ Installing
 ==========
 .. highlight:: bash
 
-With conda
-**********
-
-.. code-block:: bash
-
-    conda install -c conda-forge python-rocksdb
 
 With distro package and pypi
 ****************************
 
-This requires librocksdb-dev>=5.0
+This requires librocksdb-dev>=8 (RocksDB 8.x, 9.x or 10.x)
 
 .. code-block:: bash
 
-    apt-get install python-virtualenv python-dev librocksdb-dev
-    virtualenv venv
+    apt-get install python3-venv python3-dev librocksdb-dev
+    python3 -m venv venv
     source venv/bin/activate
-    pip install python-rocksdb
+    pip install py3-rocksdb
+
+.. note::
+
+    The PyPI distribution is named ``py3-rocksdb`` (the plain ``rocksdb`` name is
+    taken by the upstream project this is forked from). The import name is
+    unchanged: after installing you still ``import rocksdb``.
+
+.. warning::
+
+    ``py3-rocksdb`` installs the same top-level ``rocksdb`` import package as the
+    original ``rocksdb`` distribution, so the two **cannot coexist** in one
+    environment — they would overwrite each other's files and pip will *not*
+    flag the conflict. If you are migrating from the original ``rocksdb``,
+    uninstall it first::
+
+        pip uninstall rocksdb
+        pip install py3-rocksdb
 
 From source
 ***********
@@ -67,7 +78,7 @@ Building python-rocksdb
 
 .. code-block:: bash
 
-    apt-get install python-virtualenv python-dev
-    virtualenv venv
+    apt-get install python3-venv python3-dev
+    python3 -m venv venv
     source venv/bin/activate
-    pip install git+git://github.com/twmht/python-rocksdb.git#egg=python-rocksdb
+    pip install git+https://github.com/chainlaboratory/python-rocksdb.git

@@ -1,12 +1,18 @@
-from slice_ cimport Slice
+from .slice_ cimport Slice
 from libcpp.string cimport string
 from libcpp cimport bool as cpp_bool
-from logger cimport Logger
-from std_memory cimport shared_ptr
+from .logger cimport Logger
+from .std_memory cimport shared_ptr
 
 cdef extern from "rocksdb/slice_transform.h" namespace "rocksdb":
     cdef cppclass SliceTransform:
         pass
+
+    cdef const SliceTransform* ST_NewCappedPrefixTransform "rocksdb::NewCappedPrefixTransform"(
+        size_t) except+ nogil
+
+    cdef const SliceTransform* ST_NewFixedPrefixTransform "rocksdb::NewFixedPrefixTransform"(
+        size_t) except+ nogil
 
 ctypedef Slice (*transform_func)(
     void*,
@@ -33,5 +39,5 @@ cdef extern from "cpp/slice_transform_wrapper.hpp" namespace "py_rocks":
                 void*,
                 transform_func,
                 in_domain_func,
-                in_range_func) nogil except+
-        void set_info_log(shared_ptr[Logger]) nogil except+
+                in_range_func) except+ nogil
+        void set_info_log(shared_ptr[Logger]) except+ nogil

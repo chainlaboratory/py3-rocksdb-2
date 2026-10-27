@@ -23,12 +23,11 @@ A more production ready open can look like this ::
 
     opts.table_factory = rocksdb.BlockBasedTableFactory(
         filter_policy=rocksdb.BloomFilterPolicy(10),
-        block_cache=rocksdb.LRUCache(2 * (1024 ** 3)),
-        block_cache_compressed=rocksdb.LRUCache(500 * (1024 ** 2)))
+        block_cache=rocksdb.LRUCache(2 * (1024 ** 3)))
 
     db = rocksdb.DB("test.db", opts)
 
-It assings a cache of 2.5G, uses a bloom filter for faster lookups and keeps
+It assigns a cache of 2G, uses a bloom filter for faster lookups and keeps
 more data (64 MB) in memory before writting a .sst file.
 
 About Bytes And Unicode
@@ -308,6 +307,23 @@ The two arguments are the db_dir and wal_dir, which are mostly the same. ::
 
     backup = rocksdb.BackupEngine("test.db/backups")
     backup.restore_latest_backup("test.db", "test.db")
+
+
+Encryption At Rest
+==================
+
+A database can be transparently encrypted on disk by opening it through an
+encrypted environment. ::
+
+    env = rocksdb.EncryptedEnv("CTR://test")   # test provider: UserWarning!
+    opts = rocksdb.Options(create_if_missing=True, env=env)
+    db = rocksdb.DB("test.db", opts)
+
+Reopening the database requires an env with the same provider configuration;
+without it, opening fails with :py:exc:`rocksdb.errors.Corruption`. Stock
+RocksDB only ships a **test-grade** provider — real security needs an AES
+provider compiled into librocksdb. See :doc:`/api/encryption` for the full
+story, including backups and the security caveats.
 
 
 Change Memtable Or SST Implementations
