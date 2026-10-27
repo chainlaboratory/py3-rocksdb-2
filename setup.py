@@ -126,7 +126,7 @@ def main():
 
     try:
         ext_args = pkgconfig.parse('rocksdb')
-    except pkgconfig.PackageNotFoundError:
+    except (pkgconfig.PackageNotFoundError, OSError):
         include_path = os.environ.get('INCLUDE_PATH')
         library_path = os.environ.get('LIBRARY_PATH')
 

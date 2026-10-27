@@ -1,5 +1,5 @@
 py3-rocksdb
-==========
+============
 
 Python-Bindings für RocksDB. Der Importname bleibt ``rocksdb``.
 
